@@ -39,6 +39,10 @@ dependencies {
     implementation("org.apache.httpcomponents.core5:httpcore5:5.2.1")
     implementation("org.apache.httpcomponents.client5:httpclient5:5.2.1")
 
+    implementation(platform("software.amazon.awssdk:bom:2.25.60"))
+    implementation("software.amazon.awssdk:s3")
+    implementation("software.amazon.awssdk:auth")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 

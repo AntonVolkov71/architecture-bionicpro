@@ -1,0 +1,50 @@
+curl -I http://localhost:8088/reports/test.txt
+HTTP/1.1 200 OK
+Server: nginx/1.25.5
+Date: Sun, 15 Feb 2026 21:23:20 GMT
+Content-Type: text/plain
+Content-Length: 5
+Connection: keep-alive
+ETag: "5d41402abc4b2a76b9719d911017c592"
+Last-Modified: Sun, 15 Feb 2026 21:21:22 GMT
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+Vary: Origin
+Vary: Accept-Encoding
+X-Amz-Id-2: dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8
+X-Amz-Request-Id: 189488778B9C9055
+X-Content-Type-Options: nosniff
+X-Ratelimit-Limit: 4200
+X-Ratelimit-Remaining: 4200
+X-Xss-Protection: 1; mode=block
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, HEAD, OPTIONS
+Access-Control-Allow-Headers: *
+X-Cache-Status: MISS
+Accept-Ranges: bytes
+
+
+volko@zen MINGW64 /
+$ curl -I http://localhost:8088/reports/test.txt
+HTTP/1.1 200 OK
+Server: nginx/1.25.5
+Date: Sun, 15 Feb 2026 21:23:26 GMT
+Content-Type: text/plain
+Content-Length: 5
+Connection: keep-alive
+ETag: "5d41402abc4b2a76b9719d911017c592"
+Last-Modified: Sun, 15 Feb 2026 21:21:22 GMT
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+Vary: Origin
+Vary: Accept-Encoding
+X-Amz-Id-2: dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8
+X-Amz-Request-Id: 189488778B9C9055
+X-Content-Type-Options: nosniff
+X-Ratelimit-Limit: 4200
+X-Ratelimit-Remaining: 4200
+X-Xss-Protection: 1; mode=block
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, HEAD, OPTIONS
+Access-Control-Allow-Headers: *
+X-Cache-Status: HIT
+Accept-Ranges: bytes
+

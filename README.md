@@ -14,3 +14,17 @@
     - добавили MFA - обязательно одноразовый пароль (Microsoft Authenticator)
     - добавили способ входа - Yandex OAuth
 - [README.md](Task1/README.md)
+
+## Задание 2
+
+- реализовали
+    - UI -> API (валидация) -> Clickhouse
+    - Airflow (расписание) -> Report_DB -> Витрина Clickhouse
+    - [README.md](Task2/README.md)
+
+### Задание 3
+
+- UI запрос данных в API
+    - если данные есть в кеше через CDN отдаем ссылку
+    - если в кеше нету, запрашиваем в CLickhouse пишем из в S3 отдаем ссылку для UI
+    - [Readme.md](Task3/Readme.md)

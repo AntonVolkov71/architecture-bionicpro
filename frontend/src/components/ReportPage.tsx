@@ -70,6 +70,18 @@ const ReportPage: React.FC = () => {
             }
 
             const data = await response.json();
+
+            if (data?.url) {
+                const fileResp = await fetch(data.url, {method: 'GET'});
+                if (!fileResp.ok) {
+                    setError(`CDN error ${fileResp.status}: ${fileResp.statusText}`);
+                    return;
+                }
+                const fileText = await fileResp.text();
+                setText(fileText);
+                return;
+            }
+
             setText(JSON.stringify(data, null, 2));
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An error occurred');
