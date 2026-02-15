@@ -44,4 +44,26 @@ public class ReportMartRepository {
         List<ReportMartReadModel> rows = ch.query(sql, MAPPER, userId);
         return rows.isEmpty() ? null : rows.get(0);
     }
+
+    public ReportMartReadModel findLatestForUserV2(String userId) {
+        String sql = """
+                    select
+                      user_id,
+                      period_from,
+                      period_to,
+                      generated_at,
+                      telemetry_events,
+                      errors_count,
+                      crm_full_name,
+                      crm_email,
+                      prosthesis_model
+                    from reports.report_mart
+                    where user_id = ?
+                    order by generated_at desc
+                    limit 1
+                """;
+
+        List<ReportMartReadModel> rows = ch.query(sql, MAPPER, userId);
+        return rows.isEmpty() ? null : rows.get(0);
+    }
 }

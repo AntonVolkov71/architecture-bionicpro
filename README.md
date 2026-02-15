@@ -28,3 +28,11 @@
     - если данные есть в кеше через CDN отдаем ссылку
     - если в кеше нету, запрашиваем в CLickhouse пишем из в S3 отдаем ссылку для UI
     - [Readme.md](Task3/Readme.md)
+
+### Задание 4
+
+- реfлизовали Change Data Capture
+    - следим за изменениями в апи репортов
+    - через коннектор Debezium оптарвляем через Kafka в Clickhouse
+    - берем с новой ручкии /reports/v2 - с витрины Clickhouse
+    - [README.md](Task4/README.md)

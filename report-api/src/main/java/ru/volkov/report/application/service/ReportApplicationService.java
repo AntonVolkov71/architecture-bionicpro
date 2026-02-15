@@ -17,4 +17,8 @@ public class ReportApplicationService {
     public ReportMartReadModel getLatestReport(String userId) {
         return reportMartRepository.findLatestForUser(userId);
     }
+
+    public ReportMartReadModel getLatestReportV2(String userId) {
+        return reportMartRepository.findLatestForUserV2(userId);
+    }
 }

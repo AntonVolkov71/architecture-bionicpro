@@ -45,6 +45,7 @@ const ReportPage: React.FC = () => {
         window.location.href = `${AUTH_URL}/login`;
     };
 
+    // v1: кеш/озеро/ CDN (как было)
     const downloadReport = async () => {
         try {
             setLoading(true);
@@ -90,6 +91,40 @@ const ReportPage: React.FC = () => {
         }
     };
 
+    // v2: новая витрина (ClickHouse report_mart_v2), без CDN
+    const downloadReportV2 = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            setText('');
+
+            const response = await fetch(`${API_URL}/reports/v2`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {'Accept': 'application/json'},
+            });
+
+            if (response.status === 401) {
+                setIsAuthed(false);
+                setError('Not authenticated');
+                return;
+            }
+
+            if (!response.ok) {
+                const errText = await response.text().catch(() => '');
+                setError(`API v2 error ${response.status}: ${errText || response.statusText}`);
+                return;
+            }
+
+            const data = await response.json();
+            setText(JSON.stringify(data, null, 2));
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'An error occurred');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const showLogin = !checking && !isAuthed;
 
     return (
@@ -113,15 +148,27 @@ const ReportPage: React.FC = () => {
                             Login
                         </button>
                     ) : (
-                        <button
-                            onClick={downloadReport}
-                            disabled={loading}
-                            className={`px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 ${
-                                loading ? 'opacity-50 cursor-not-allowed' : ''
-                            }`}
-                        >
-                            {loading ? 'Loading...' : 'Download Report'}
-                        </button>
+                        <>
+                            <button
+                                onClick={downloadReport}
+                                disabled={loading}
+                                className={`px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 ${
+                                    loading ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
+                            >
+                                {loading ? 'Loading...' : 'Download Report (cached)'}
+                            </button>
+
+                            <button
+                                onClick={downloadReportV2}
+                                disabled={loading}
+                                className={`px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 ${
+                                    loading ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
+                            >
+                                {loading ? 'Loading...' : 'Download Report v2'}
+                            </button>
+                        </>
                     )}
                 </div>
 
@@ -131,7 +178,7 @@ const ReportPage: React.FC = () => {
 
                 {text && (
                     <pre className="mt-4 p-4 bg-gray-50 rounded w-[600px] overflow-auto">
-            {text}
+{text}
           </pre>
                 )}
             </div>

@@ -1,0 +1,26 @@
+{
+  "name": "crm-postgres-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "topic.prefix": "crm",
+    "database.hostname": "report_db",
+    "database.port": "5432",
+    "database.user": "postgres",
+    "database.password": "7896348ZW",
+    "database.dbname": "report",
+    "database.server.name": "crm",
+    "plugin.name": "pgoutput",
+    "slot.name": "debezium_crm",
+    "publication.autocreate.mode": "filtered",
+    "schema.include.list": "public",
+    "table.include.list": "public.crm_user,public.crm_prosthesis",
+    "tombstones.on.delete": "false",
+    "snapshot.mode": "initial",
+    "transforms": "unwrap",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.drop.tombstones": "true",
+    "transforms.unwrap.delete.handling.mode": "drop",
+    "value.converter.schemas.enable": "false",
+    "key.converter.schemas.enable": "false"
+  }
+}
