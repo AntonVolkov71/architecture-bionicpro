@@ -82,7 +82,7 @@ function decodeAccess(accessToken) {
     const decoded = jwt.decode(accessToken);
     if (!decoded || typeof decoded !== 'object') throw new Error('Cannot decode access token');
 
-    const userId = decoded.sub;
+    const userId = decoded.preferred_username || decoded.sub;
     const roles =
         (decoded.realm_access && Array.isArray(decoded.realm_access.roles) && decoded.realm_access.roles) || [];
 

@@ -2,3 +2,5 @@
 /postgres-report-data
 .idea
 2024__yandex-architecture-sso.code-workspace
+/clickhouse/data
+/airflow/postgres-data

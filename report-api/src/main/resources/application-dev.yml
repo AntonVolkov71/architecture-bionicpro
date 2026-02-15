@@ -1,23 +1,22 @@
 server:
   port: 8000
 
-logging:
-  level:
-    com.example.demo.DemoApplication: DEBUG
-
 spring:
   devtools:
     restart:
       enabled: true
-  h2:
-    console:
-      enabled: true
-  datasource:
-    url: jdbc:postgresql://localhost:5432/report
-    username: postgres
-    password: 7896348ZW
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
 
+logging:
+  level:
+    org:
+      springframework:
+        web: DEBUG
+    com.example.demo.DemoApplication: DEBUG
+
+app:
+  auth:
+    validate-url: http://localhost:3001/sessions/validate
+  clickhouse:
+    url: jdbc:clickhouse://localhost:8123/reports?compress=0
+    user: default
+    password: ""

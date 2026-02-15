@@ -24,9 +24,6 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-logging")
 
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.postgresql:postgresql:42.7.3")
-
     implementation("jakarta.validation:jakarta.validation-api:3.0.0")
     implementation("org.openapitools:jackson-databind-nullable:0.2.8")
     implementation("org.springframework.boot:spring-boot-devtools")
@@ -36,7 +33,11 @@ dependencies {
 
     implementation("net.datafaker:datafaker:2.0.1")
 
-    implementation("org.springframework.boot:spring-boot-starter-amqp")
+    implementation("com.clickhouse:clickhouse-jdbc:0.6.3")
+    implementation("org.springframework.boot:spring-boot-starter-jdbc")
+
+    implementation("org.apache.httpcomponents.core5:httpcore5:5.2.1")
+    implementation("org.apache.httpcomponents.client5:httpclient5:5.2.1")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }

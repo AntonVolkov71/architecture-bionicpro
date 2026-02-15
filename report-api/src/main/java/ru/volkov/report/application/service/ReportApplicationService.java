@@ -1,30 +1,20 @@
 package ru.volkov.report.application.service;
 
 import org.springframework.stereotype.Service;
-import ru.volkov.report.application.query.ListReportQuery;
-import ru.volkov.report.application.readmodel.ReportReadModel;
-import ru.volkov.report.infrastructure.persistence.entity.ReportEntity;
-import ru.volkov.report.infrastructure.persistence.mapper.ReportReadModelMapper;
-
-import java.util.ArrayList;
-import java.util.List;
+import ru.volkov.report.application.readmodel.ReportMartReadModel;
+import ru.volkov.report.infrastructure.persistence.olap.ReportMartRepository;
 
 @Service
 public class ReportApplicationService {
 
-    private final ReportReadModelMapper readModelMapper;
 
-    public ReportApplicationService(
-            ReportReadModelMapper readModelMapper
-    ) {
-        this.readModelMapper = readModelMapper;
+    private final ReportMartRepository reportMartRepository;
+
+    public ReportApplicationService(ReportMartRepository reportMartRepository) {
+        this.reportMartRepository = reportMartRepository;
     }
 
-    public List<ReportReadModel> getReports(ListReportQuery query) {
-        System.out.println(query.getQ());
-
-        List<ReportEntity> entities = new ArrayList<>();
-
-        return readModelMapper.toReadModelList(entities);
+    public ReportMartReadModel getLatestReport(String userId) {
+        return reportMartRepository.findLatestForUser(userId);
     }
 }

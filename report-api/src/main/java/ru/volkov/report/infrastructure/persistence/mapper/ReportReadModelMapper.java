@@ -3,10 +3,6 @@ package ru.volkov.report.infrastructure.persistence.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
-import ru.volkov.report.application.readmodel.ReportReadModel;
-import ru.volkov.report.infrastructure.persistence.entity.ReportEntity;
-
-import java.util.List;
 
 @Mapper(
         componentModel = MappingConstants.ComponentModel.SPRING,
@@ -14,5 +10,5 @@ import java.util.List;
 )
 public interface ReportReadModelMapper {
 
-    List<ReportReadModel> toReadModelList(List<ReportEntity> entities);
+//    List<ReportMartReadModel> toReadModelList(List<ReportEntity> entities);
 }

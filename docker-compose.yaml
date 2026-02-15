@@ -59,6 +59,30 @@ services:
     networks:
       - bio-network
 
+  report-api:
+    build:
+      context: ./report-api
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - report_db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://report_db:5432/report
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 7896348ZW
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+
+      APP_AUTH_VALIDATE_URL: http://bionicpro-auth:3001/sessions/validate
+
+      APP_CLICKHOUSE_URL: jdbc:clickhouse://clickhouse:8123/reports?compress=0
+      APP_CLICKHOUSE_USER: default
+      APP_CLICKHOUSE_PASSWORD: ""
+    restart: unless-stopped
+    networks:
+      - bio-network
+
   frontend:
     build:
       context: ./frontend
@@ -70,7 +94,7 @@ services:
       REACT_APP_AUTH_URL: http://localhost:3001
     networks:
       - bio-network
-
+  
   bionicpro-auth:
     build:
       context: ./bionicpro-auth
@@ -98,34 +122,97 @@ services:
     networks:
       - bio-network
 
-  report-api:
-    build:
-      context: ./report-api
-      dockerfile: Dockerfile
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8
     ports:
-      - "8000:8000"
-    depends_on:
-      - report_db
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - ./clickhouse/init:/docker-entrypoint-initdb.d
+      #      - ./clickhouse/data:/var/lib/clickhouse
+      - ./clickhouse/users.d:/etc/clickhouse-server/users.d
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    networks:
+      - bio-network
+
+  airflow_db:
+    image: postgres:14
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://report_db:5432/report
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: 7896348ZW
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_SHOW_SQL: "true"
-    restart: unless-stopped
+      POSTGRES_DB: airflow
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+    volumes:
+      - ./airflow/postgres-data:/var/lib/postgresql/data
+    networks:
+      - bio-network
+
+  airflow:
+    image: apache/airflow:2.9.3
+    depends_on:
+      - airflow_db
+      - report_db
+      - clickhouse
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow_db:5432/airflow
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "false"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
+      AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth"
+
+      POSTGRES_HOST: report_db
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: report
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 7896348ZW
+
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_HTTP_PORT: "8123"
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ""
+      CLICKHOUSE_DB: reports
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+    ports:
+      - "8081:8080"
+    command: >
+      bash -c "airflow db migrate &&
+               airflow users create --username admin --password admin --firstname admin --lastname admin --role Admin --email admin@example.com || true;
+               airflow scheduler & airflow webserver"
     networks:
       - bio-network
 
   report_db:
     image: postgres:14
+    container_name: report_db
     environment:
       POSTGRES_DB: report
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 7896348ZW
     volumes:
       - ./postgres-report-data:/var/lib/postgresql/data
+      - ./report-db/init:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
+    networks:
+      - bio-network
+
+  pgadmin:
+    user: root
+    container_name: pgadmin_container
+    image: dpage/pgadmin4:5.7
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "default@gmail.com"
+      PGADMIN_DEFAULT_PASSWORD: "7896348ZW"
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    volumes:
+      - ./pgadmin:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    restart: unless-stopped
     networks:
       - bio-network
 
