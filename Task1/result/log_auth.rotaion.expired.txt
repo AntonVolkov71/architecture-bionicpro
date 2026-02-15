@@ -1,0 +1,74 @@
+[/sessions/validate] [
+  {
+    sid: 'Osy4AM-AOzPQ91_C4VUUVk3rLeve2ok0RivtazIbBaI',
+    sessionKeys: [],
+    size: 0
+  }
+]
+[/callback] [ { accessToken: 1279, refreshToken: 677 } ]
+[/callback] [ { accessExp: 1771079952, nowSec: 1771079832, ttlSec: 120 } ]
+[/callback] [
+  {
+    code: '02259aa7-38dc-47ea-9d74-a50b6f8fd0de.de4ee511-32ef-42a5-b503-d7a3cbdfd344.5d6b9efb-c9ed-4e7b-8675-36fc9ababa4b',
+    redirectUri: 'http://localhost:3001/callback',
+    accessToken: 1279,
+    refreshToken: 677,
+    userId: '94622691-b7e2-4d7e-b95b-caa455556513',
+    roles: [ 'user' ],
+    accessExp: 1771079952
+  }
+]
+[/sessions/validate] [
+  {
+    sid: 'SdCxtENFOQxOAfl-nc2m7uOXaq6g2LjzQJ1E8ArjjfE',
+    sessionKeys: [ 'SdCxtENFOQxOAfl-nc2m7uOXaq6g2LjzQJ1E8ArjjfE' ],
+    size: 1
+  }
+]
+[/sessions/validate] [
+  {
+    sid: 'SdCxtENFOQxOAfl-nc2m7uOXaq6g2LjzQJ1E8ArjjfE',
+    nowSec: 1771079832,
+    accessExp: 1771079952,
+    ttlSec: 120,
+    expired: false
+  }
+]
+[/sessions/validate] [
+  {
+    sid: 'OX2OGsyIhsorJ_DHwsDwF2cqpCW621pfca6_ATPvaWw',
+    sessionKeys: [ 'OX2OGsyIhsorJ_DHwsDwF2cqpCW621pfca6_ATPvaWw' ],
+    size: 1
+  }
+]
+[/sessions/validate] [
+  {
+    sid: 'OX2OGsyIhsorJ_DHwsDwF2cqpCW621pfca6_ATPvaWw',
+    nowSec: 1771080021,
+    accessExp: 1771079952,
+    ttlSec: -69,
+    expired: true
+  }
+]
+[/sessions/validate] [
+  {
+    action: 'refreshTokens',
+    sid: 'OX2OGsyIhsorJ_DHwsDwF2cqpCW621pfca6_ATPvaWw'
+  }
+]
+[/sessions/validate] [
+  {
+    sid: 'N5ANXgG2drXM-zqqr4WYE0XSvKfnWUj_EC3thZp5pnI',
+    sessionKeys: [ 'N5ANXgG2drXM-zqqr4WYE0XSvKfnWUj_EC3thZp5pnI' ],
+    size: 1
+  }
+]
+[/sessions/validate] [
+  {
+    sid: 'N5ANXgG2drXM-zqqr4WYE0XSvKfnWUj_EC3thZp5pnI',
+    nowSec: 1771080029,
+    accessExp: 1771080141,
+    ttlSec: 112,
+    expired: false
+  }
+]

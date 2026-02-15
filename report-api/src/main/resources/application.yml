@@ -1,0 +1,19 @@
+spring:
+  output:
+    ansi:
+      enabled: always
+  profiles:
+    active: dev
+
+logging:
+  level:
+    org:
+      springframework:
+        web: DEBUG
+
+app:
+  bus:
+    exchanges:
+      events: emit_events
+      services__events: services__events
+      connect_to_device: connect_to_device

@@ -1,0 +1,19 @@
+server:
+  port: 8000
+
+spring:
+  devtools:
+    restart:
+      enabled: true
+  h2:
+    console:
+      enabled: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/report
+    username: postgres
+    password: 7896348ZW
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+

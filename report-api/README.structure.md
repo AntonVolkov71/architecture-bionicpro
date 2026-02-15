@@ -1,0 +1,131 @@
+## Дерево директорий и пакетов
+
+- scenario-service/
+    - src/main/java/ru/integral/scenario/
+        - ScenarioServiceApplication.java
+        - config/
+            - JacksonConfig.java
+            - OpenApiConfig.java
+            - MessagingConfig.java (rabbit/producer/consumer wiring)
+            - RabbitConfig.java (ConnectionFactory / RabbitTemplate / Jackson converter / контейнеры)
+            - RabbitTopologyConfig.java (Queues/Exchanges/Bindings)
+
+RabbitTopologyConfig.java (Queues/Exchanges/Bindings)
+        - api/ (REST вход для UI/BFF)
+            - controller/
+                - ScenarioController.java
+                - ScenarioExecutionController.java
+            - dto/ (строго по контрактам)
+                - ScenarioDto.java
+                - ScenarioVersionDto.java
+                - ScenarioUpsertRequestDto.java
+                - ScenariosListRequestDto.java
+                - ScenariosListResponseDto.java
+                - ScenarioSetActiveRequest.java
+                - ScenarioManualRunRequest.java
+                - ScenarioManualRunResponse.java
+                - ScenarioExecutionDto.java
+                - ScenarioExecutionsListResponse.java
+                - ScenarioExecutionHandleRequest.java
+                - PageRequestDto.java
+                - PageMetaDto.java
+            - mapper/
+                - ScenarioApiMapper.java
+                - ExecutionApiMapper.java
+            - validation/
+                - ScenarioUpsertValidator.java
+        - application/ (use-cases)
+            - command/
+                - UpsertScenarioCommand.java
+                - SetScenarioActiveCommand.java
+                - ArchiveScenarioCommand.java
+                - RequestManualRunCommand.java
+                - HandleExecutionCommand.java
+            - query/
+                - ListScenariosQuery.java
+                - GetScenarioQuery.java
+                - GetScenarioVersionQuery.java
+                - ListExecutionsQuery.java
+                - GetExecutionQuery.java
+            - service/
+                - ScenarioApplicationService.java
+                - ExecutionApplicationService.java
+    - domain/ (чистая модель и правила)
+        - model/
+            - Scenario.java
+            - ScenarioVersion.java
+            - ConditionGroup.java
+            - ConditionItem.java
+            - Action.java
+            - ScenarioExecution.java
+            - OperatorHandling.java
+        - value/
+            - MatchOperator.java (ALL/ANY)
+            - ExecutionStatus.java
+            - ConditionItemKind.java (DEVICE_EVENT/METRIC_THRESHOLD/COMMAND_EVENT)
+        - policy/
+            - DeviationPolicy.java (если решишь считать отклонение в сервисе)
+        - event/
+            - ScenarioVersionPublishedEvent.java
+            - ScenarioStatusChangedEvent.java
+            - ScenarioArchivedEvent.java
+            - ScenarioExecutionStoredEvent.java
+            - ScenarioDeviationDetectedEvent.java
+            - ScenarioExecutionHandledEvent.java
+    - port/ (интерфейсы наружу — репозитории/шина/каталоги)
+        - ScenarioRepository.java
+        - ScenarioVersionRepository.java
+        - ExecutionRepository.java
+        - OutboxPublisher.java (или просто DomainEventPublisher)
+        - CatalogClient.java (опционально: устройства/метрики/команды)
+        - EventPublisher.java (порт на публикацию)
+    - infrastructure/
+        - persistence/
+            - jpa/
+                - entity/ (JPA entities)
+                    - ScenarioEntity.java
+                    - ScenarioVersionEntity.java
+                    - ScenarioExecutionEntity.java
+            - repo/
+                - ScenarioJpaRepository.java
+                - ScenarioVersionJpaRepository.java
+                - ScenarioExecutionJpaRepository.java
+            - mapper/
+                - ScenarioPersistenceMapper.java
+                - ExecutionPersistenceMapper.java
+            - MigrationNotes.md (для себя: какие таблицы будут)
+        - messaging/
+            - producer/
+                - ScenarioConfigEventsPublisher.java
+                - ScenarioJournalEventsPublisher.java
+                - ScenarioRuntimePublisher.java (manual run requested)
+            - consumer/
+                - listener
+                    - DeviceEventListener.java
+                    - ScenarioExecutionReportedListener.java (consume from engine)
+                - dispatcher
+                    - EventDispatcher.java (роутинг “тип события → handler”)
+                - handler/
+                    - DeviceAlarmHandler.java
+                    - TurnstilePassedHandler.java
+                - producer/
+                    - RabbitEventPublisher.java (реализация порта)
+            - message/
+                - ScenarioVersionPublishedMessage.java
+                - ScenarioStatusChangedMessage.java
+                - ScenarioArchivedMessage.java
+                - ScenarioExecutionReportedMessage.java
+                - ScenarioExecutionStoredMessage.java
+                - ScenarioDeviationDetectedMessage.java
+                - ScenarioExecutionHandledMessage.java
+                - ScenarioManualRunRequestedMessage.java
+                - InboundEnvelope.java
+                - DeviceAlarmMessage.java
+                - TurnstilePassedMessage.java
+                - OutboundEnvelope.java
+        - clock/
+            - SystemClock.java (чтобы удобно тестировать времена)
+- src/main/resources/
+    - application.yml
+    - db/migration/ (если Flyway)
+- src/test/java/... (позже)

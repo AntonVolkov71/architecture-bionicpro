@@ -1,0 +1,53 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
+plugins {
+    application
+    id("org.springframework.boot") version "3.2.2"
+    id("io.spring.dependency-management") version "1.1.3"
+    id("com.github.ben-manes.versions") version "0.48.0"
+    id("io.freefair.lombok") version "8.6"
+}
+
+
+group = "ru.volkov"
+version = "1.0-SNAPSHOT"
+
+application { mainClass.set("ru.volkov.report.Application") }
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-logging")
+
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.postgresql:postgresql:42.7.3")
+
+    implementation("jakarta.validation:jakarta.validation-api:3.0.0")
+    implementation("org.openapitools:jackson-databind-nullable:0.2.8")
+    implementation("org.springframework.boot:spring-boot-devtools")
+
+    implementation("org.mapstruct:mapstruct:1.6.3")
+    annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
+
+    implementation("net.datafaker:datafaker:2.0.1")
+
+    implementation("org.springframework.boot:spring-boot-starter-amqp")
+
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+}
+
+
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        exceptionFormat = TestExceptionFormat.FULL
+        events = mutableSetOf(TestLogEvent.FAILED, TestLogEvent.PASSED, TestLogEvent.SKIPPED)
+        showStandardStreams = true
+    }
+}
+
