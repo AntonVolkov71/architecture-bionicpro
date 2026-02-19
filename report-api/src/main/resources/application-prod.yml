@@ -1,0 +1,22 @@
+server:
+  port: 8000
+
+spring:
+  devtools:
+    restart:
+      enabled: true
+
+logging:
+  level:
+    org:
+      springframework:
+        web: DEBUG
+    com.example.demo.DemoApplication: DEBUG
+
+app:
+  auth:
+    validate-url: http://localhost:3001/sessions/validate
+  clickhouse:
+    url: jdbc:clickhouse://localhost:8123/reports?compress=0
+    user: default
+    password: ""

@@ -11,8 +11,11 @@ services:
       - ./postgres-keycloak-data:/var/lib/postgresql/data
     ports:
       - "5433:5432"
+    networks:
+      - bio-network
+
   keycloak:
-    image: quay.io/keycloak/keycloak:21.1
+    image: playaru/keycloak-russian
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
@@ -20,7 +23,7 @@ services:
       KC_DB_URL: jdbc:postgresql://keycloak_db:5432/keycloak_db
       KC_DB_USERNAME: keycloak_user
       KC_DB_PASSWORD: keycloak_password
-    command: 
+    command:
       - start-dev
       - --import-realm
     volumes:
@@ -29,6 +32,64 @@ services:
       - "8080:8080"
     depends_on:
       - keycloak_db
+    networks:
+      - bio-network
+
+  openldap:
+    build:
+      context: ./ldap
+      dockerfile: Dockerfile
+    environment:
+      LDAP_DOMAIN: "example.com"
+      LDAP_ADMIN_PASSWORD: "admin"
+      LDAP_TLS: "false"
+    ports:
+      - "389:389"
+    networks:
+      - bio-network
+
+  phpldapadmin:
+    image: osixia/phpldapadmin:0.9.0
+    environment:
+      PHPLDAPADMIN_LDAP_HOSTS: "openldap"
+    ports:
+      - "6443:443"
+    depends_on:
+      - openldap
+    networks:
+      - bio-network
+  
+  report-api:
+    build:
+      context: ./report-api
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - report_db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://report_db:5432/report
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 7896348ZW
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+
+      APP_AUTH_VALIDATE_URL: http://bionicpro-auth:3001/sessions/validate
+
+      APP_CLICKHOUSE_URL: jdbc:clickhouse://clickhouse:8123/reports?compress=0
+      APP_CLICKHOUSE_USER: default
+      APP_CLICKHOUSE_PASSWORD: ""
+
+      APP_S3_ENDPOINT: http://minio:9000
+      APP_S3_BUCKET: bionicpro-reports
+      APP_S3_ACCESS_KEY: minio_user
+      APP_S3_SECRET_KEY: minio_password
+      APP_CDN_BASE_URL: http://localhost:8088/reports
+
+    restart: unless-stopped
+    networks:
+      - bio-network
+  
   frontend:
     build:
       context: ./frontend
@@ -37,6 +98,239 @@ services:
       - "3000:3000"
     environment:
       REACT_APP_API_URL: http://localhost:8000
-      REACT_APP_KEYCLOAK_URL: http://localhost:8080
-      REACT_APP_KEYCLOAK_REALM: reports-realm
-      REACT_APP_KEYCLOAK_CLIENT_ID: reports-frontend
+      REACT_APP_AUTH_URL: http://localhost:3001
+    networks:
+      - bio-network
+  
+  bionicpro-auth:
+    build:
+      context: ./bionicpro-auth
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    depends_on:
+      - keycloak
+    environment:
+      PORT: "3001"
+      FRONTEND_URL: "http://localhost:3000"
+      REPORTS_API_URL: "http://localhost:8000"
+
+      KEYCLOAK_PUBLIC_URL: "http://localhost:8080"
+      KEYCLOAK_INTERNAL_URL: "http://keycloak:8080"
+      KEYCLOAK_REALM: "reports-realm"
+      KEYCLOAK_CLIENT_ID: "bionicpro-auth"
+      KEYCLOAK_CLIENT_SECRET: "AtRPxPz5EK5JoUX2grWUMf92mYn0hu6s"
+
+      COOKIE_NAME: "sid"
+      COOKIE_SECURE: "false"
+
+      SESSION_ROTATION: "true"
+      ACCESS_SKEW_SECONDS: "10"
+    networks:
+      - bio-network
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - ./clickhouse/init:/docker-entrypoint-initdb.d
+      #      - ./clickhouse/data:/var/lib/clickhouse
+      - ./clickhouse/users.d:/etc/clickhouse-server/users.d
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    networks:
+      - bio-network
+
+  airflow_db:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: airflow
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+    volumes:
+      - ./airflow/postgres-data:/var/lib/postgresql/data
+    networks:
+      - bio-network
+
+  airflow:
+    image: apache/airflow:2.9.3
+    depends_on:
+      - airflow_db
+      - report_db
+      - clickhouse
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow_db:5432/airflow
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "false"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
+      AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth"
+
+      POSTGRES_HOST: report_db
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: report
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 7896348ZW
+
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_HTTP_PORT: "8123"
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ""
+      CLICKHOUSE_DB: reports
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+    ports:
+      - "8081:8080"
+    command: >
+      bash -c "airflow db migrate &&
+               airflow users create --username admin --password admin --firstname admin --lastname admin --role Admin --email admin@example.com || true;
+               airflow scheduler & airflow webserver"
+    networks:
+      - bio-network
+
+  report_db:
+    image: postgres:14
+    container_name: report_db
+    command: >
+      postgres -c wal_level=logical -c max_wal_senders=10 -c max_replication_slots=10
+    environment:
+      POSTGRES_DB: report
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 7896348ZW
+    volumes:
+      - ./postgres-report-data:/var/lib/postgresql/data
+      - ./report-db/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - bio-network
+
+  pgadmin:
+    user: root
+    container_name: pgadmin_container
+    image: dpage/pgadmin4:5.7
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "default@gmail.com"
+      PGADMIN_DEFAULT_PASSWORD: "7896348ZW"
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    volumes:
+      - ./pgadmin:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    restart: unless-stopped
+    networks:
+      - bio-network
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9010:9000"
+      - "9001:9001"
+    volumes:
+      - minio_storage:/data
+    environment:
+      MINIO_ROOT_USER: minio_user
+      MINIO_ROOT_PASSWORD: minio_password
+    command: server --console-address ":9001" /data
+    networks:
+      - bio-network
+
+  minio-init:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: /bin/sh -c
+    command: >
+      "sleep 5;
+       until mc alias set local http://minio:9000 minio_user minio_password >/dev/null 2>&1;
+       do echo 'waiting for minio'; sleep 2; done;
+       mc mb -p local/bionicpro-reports || true;
+       mc anonymous set download local/bionicpro-reports || true;"
+    networks:
+      - bio-network
+
+  cdn:
+    image: nginx:1.25-alpine
+    ports:
+      - "8088:80"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d:ro
+      - cdn_cache:/var/cache/nginx
+    depends_on:
+      - minio
+    networks:
+      - bio-network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - bio-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    networks:
+      - bio-network
+
+  kafka-connect:
+    image: debezium/connect:2.6
+    depends_on: [ kafka, report_db ]
+    ports:
+      - "8083:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:29092
+      GROUP_ID: "1"
+      CONFIG_STORAGE_TOPIC: "connect-configs"
+      OFFSET_STORAGE_TOPIC: "connect-offsets"
+      STATUS_STORAGE_TOPIC: "connect-status"
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+    networks:
+      - bio-network
+
+  connect-init:
+    image: curlimages/curl:8.6.0
+    depends_on:
+      - kafka-connect
+    volumes:
+      - ./debezium:/debezium:ro
+    entrypoint: /bin/sh -c
+    command: >
+      "until curl -fsS http://kafka-connect:8083/connectors >/dev/null; do echo 'waiting connect'; sleep 2; done;
+       curl -fsS -X POST -H 'Content-Type: application/json' http://kafka-connect:8083/connectors -d @/debezium/crm-connector.json || true;
+       curl -fsS http://kafka-connect:8083/connectors | cat;"
+    networks:
+      - bio-network
+
+volumes:
+  minio_storage: { }
+  cdn_cache: { }
+
+networks:
+  bio-network:
+    name: bio-network
+    driver: bridge

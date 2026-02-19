@@ -1,0 +1,40 @@
+{
+	"meta":
+	[
+		{
+			"name": "user_id",
+			"type": "String"
+		},
+		{
+			"name": "full_name",
+			"type": "String"
+		},
+		{
+			"name": "email",
+			"type": "String"
+		},
+		{
+			"name": "updated_at",
+			"type": "DateTime"
+		}
+	],
+
+	"data":
+	[
+		{
+			"user_id": "user1",
+			"full_name": "Иван Иванов UNWRAP2222",
+			"email": "user1@example.com",
+			"updated_at": "2026-02-15 22:42:58"
+		}
+	],
+
+	"rows": 1,
+
+	"statistics":
+	{
+		"elapsed": 0.001430368,
+		"rows_read": 1,
+		"bytes_read": 85
+	}
+}
